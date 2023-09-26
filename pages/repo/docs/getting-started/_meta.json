@@ -1,5 +1,5 @@
 {
-  "add-to-project": "Add to Existing Project",
-  "create-new": "Create a New Monorepo",
-  "existing-monorepo": "Add to Existing Monorepo"
+  "add-to-project": "添加到现有项目",
+  "create-new": "创建一个新的 Monorepo 仓库",
+  "existing-monorepo": "添加到现有 Monorepo 仓库"
 }

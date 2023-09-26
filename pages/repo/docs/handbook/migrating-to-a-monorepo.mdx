@@ -1,17 +1,18 @@
 import Callout from "../../../../components/Callout";
 
-# Migrating to a Monorepo
+# 迁移到 Monorepo
 
-Migrating from a multi-repo setup to a monorepo setup can bring enormous benefits for productivity, especially if:
 
-- You're finding it hard to share code between applications
-- You want a unified approach on how your team builds code
+从 multi-repo 迁移到 monorepo 可以为工作效率带来巨大的好处，尤其是在以下情况下：
 
-It can be daunting to move to a monorepo. But with careful planning, it can go pretty smoothly.
+- 当你发现很难在应用程序之间共享代码
+- 希望团队采用统一的方式构建代码
 
-## Folder structure
+迁移到 monorepo 可能会有点困难，但是不要慌，稳住能赢。
 
-Let's imagine your multi-repo setup looks like this:
+## 文件夹结构
+
+multi-repo 可能长这样：
 
 ```
 web (repo 1)
@@ -24,9 +25,9 @@ app (repo 3)
 ├─ package.json
 ```
 
-You've got three repositories, `web`, `docs` and `app`. They don't have any shared dependencies, but you've noticed _lots_ of duplicated code between them.
+有 3 个代码库, `web`, `docs` and `app`。它们没有共享的依赖，但是它们之间有很多重复的代码。
 
-The best way to organise them in a monorepo would be like so:
+迁移成 monorepo 的话文件夹结构推荐是这样：
 
 ```
 my-monorepo
@@ -39,8 +40,7 @@ my-monorepo
 │     └─ package.json
 └─ package.json
 ```
-
-To start sharing code, you could use the [internal package](/repo/docs/handbook/sharing-code/internal-packages) pattern, resulting in a new `packages` folder:
+为了更好的代码复用，可以创建一个[内部使用的包](/repo/docs/handbook/sharing-code/internal-packages)，所以就会有一个新的文件夹 `packages`
 
 ```
 my-monorepo
@@ -58,20 +58,19 @@ my-monorepo
 ```
 
 <Callout type="idea">
-  If you're planning to move to a monorepo, try sketching out the exact folder
-  structure you're aiming for.
+  提示：如果你要迁移到 monorepo，先构思一下你的文件夹结构草图
 </Callout>
 
-## Setting up workspaces
+## 设置工作区
 
-Once your apps are in the right folder structure, you'll need to set up workspaces and install your dependencies. Our sections on [setting up workspaces](/repo/docs/handbook/workspaces) should help.
+文件夹结构有了之后，接下来就是设置工作区配置并且安装依赖，参见 [设置工作区](/repo/docs/handbook/workspaces)
 
-## Handling tasks
+## 任务处理
 
-Now your workspaces are set up, you'll need to figure out how you're going to run your tasks in your new monorepo. We've got sections on:
+现在工作空间已经设置好了，你需要弄清楚如何在新的 monorepo 中运行任务。我们将介绍以下内容：
 
-1. How to [configure tasks](/repo/docs/core-concepts/running-tasks) with Turborepo.
-1. How to set up your [development tasks](/repo/docs/handbook/dev)
-1. How to set up [linting](/repo/docs/handbook/linting)
-1. How to [build your application](/repo/docs/handbook/building-your-app)
-1. How to set up [testing](/repo/docs/handbook/testing)
+1. 用 Turborepo [设置任务](/repo/docs/core-concepts/running-tasks).
+1. 设置 [dev 任务](/repo/docs/handbook/dev)
+1. [lint](/repo/docs/handbook/linting)
+1. [build](/repo/docs/handbook/building-your-app)
+1. [test](/repo/docs/handbook/testing)

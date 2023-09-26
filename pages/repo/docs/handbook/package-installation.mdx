@@ -2,27 +2,27 @@ import Callout from "../../../../components/Callout";
 import HeartIcon from "@heroicons/react/solid/HeartIcon";
 import { Tabs, Tab } from "../../../../components/Tabs";
 
-# Package Installation
+# 包的安装 
 
-A package manager (like `npm`) handles two things for you: [managing workspaces](/repo/docs/handbook/workspaces) and installing packages.
+包管理工具 (比如 `npm`) 可以帮你2件事：[管理 workspaces](/repo/docs/handbook/workspaces) 和安装包.
 
-Turborepo is compatible with four package managers:
+Turborepo 和以下的包管理工具都兼容：
 
 - [npm](https://docs.npmjs.com/cli/v8/using-npm/workspaces#description)
 - [pnpm](https://pnpm.io/workspaces)
 - [Yarn 1](https://classic.yarnpkg.com/lang/en/docs/workspaces/)
-- Yarn >=2 (docs coming soon)
+- Yarn >=2 (待添加文档)
 
-You should use whichever you feel most comfortable with - but **if you're a monorepo beginner, we recommend npm**.
+上述工具你可以挑选一个你熟悉的上手，但是如果你是一个 monorepo 新手，我们推荐从 npm 开始。
 
-If you're **comfortable with monorepos, we recommend pnpm**. It's faster and offers some useful CLI options like `--filter`.
+如果你 **对 monorepo 概念熟悉，我们推荐 pnpm**. pnpm 更快而且提供了一些有用的 CLI 参数，比如`--filter`.
 
-## Installing packages
+## 包的下载
 
-When you first clone or create your monorepo, you'll need to:
+如果你是第一次克隆 monorepo 仓库，你需要做：
 
-1. Make sure you're in the root directory of your monorepo
-2. Run the install command:
+1. 切换到项目的根目录
+2. 运行 install 命令
 
 <Tabs items={["npm", "yarn", "pnpm"]} storageKey="selected-pkg-manager">
   <Tab>```bash npm install ```</Tab>
@@ -30,41 +30,41 @@ When you first clone or create your monorepo, you'll need to:
   <Tab>```bash pnpm install ```</Tab>
 </Tabs>
 
-You'll now see `node_modules` folders appear in the root of your repository, and in each workspace.
+之后你会看到根目录下有`node_modules`目录，同样的每个 workspace 下也有。
 
-## Adding/removing/upgrading packages
+## 添加、移除、升级包
 
-You can add, remove and upgrade packages from within your monorepo using your package manager's built-in commands:
+您可以使用软件包管理器的内置命令在 monorepo 中添加、删除和升级软件包：
 
 <Tabs items={['npm', 'yarn', 'pnpm']} storageKey="selected-pkg-manager">
   <Tab>
 
-    **Install a package in a workspace**
+    **在 workspace 下安装包**
     ```bash
     npm install <package> --workspace=<workspace>
     ```
 
-    Example:
+    举例:
     ```bash
     npm install react --workspace=web
     ```
 
-    **Remove a package from a workspace**
+    **在 workspace 下移除包**
     ```bash
     npm uninstall <package> --workspace=<workspace>
     ```
 
-    Example:
+    举例:
     ```bash
     npm uninstall react --workspace=web
     ```
 
-    **Upgrade a package in a workspace**
+    **在 workspace 下升级包**
     ```bash
     npm update <package> --workspace=<workspace>
     ```
 
-    Example:
+    举例:
     ```bash
     npm update react --workspace=web
     ```
@@ -72,32 +72,32 @@ You can add, remove and upgrade packages from within your monorepo using your pa
   </Tab>
   <Tab>
 
-    **Install a package in a workspace**
+    **在 workspace 下安装包**
     ```bash
     yarn workspace <workspace> add <package>
     ```
 
-    Example:
+    举例:
     ```bash
     yarn workspace web add react
     ```
 
-    **Remove a package from a workspace**
+    **在 workspace 下移除包**
     ```bash
     yarn workspace <workspace> remove <package>
     ```
 
-    Example:
+    举例:
     ```bash
     yarn workspace web remove react
     ```
 
-    **Upgrade a package in a workspace**
+    **在 workspace 下升级包**
     ```bash
     yarn workspace <workspace> upgrade <package>
     ```
 
-    Example:
+    举例:
     ```bash
     yarn workspace web upgrade react
     ```
@@ -105,32 +105,32 @@ You can add, remove and upgrade packages from within your monorepo using your pa
   </Tab>
   <Tab>
 
-    **Install a package in a workspace**
+    **在 workspace 下安装包**
     ```bash
     pnpm add <package> --filter <workspace>
     ```
 
-    Example:
+    举例:
     ```bash
     pnpm add react --filter web
     ```
 
-    **Remove a package from a workspace**
+    **在 workspace 下移除包**
      ```bash
     pnpm uninstall <package> --filter <workspace>
     ```
 
-    Example:
+    举例:
     ```bash
     pnpm uninstall react --filter web
     ```
 
-    **Upgrade a package in a workspace**
+    **在 workspace 下升级包**
      ```bash
     pnpm update <package> --filter <workspace>
     ```
 
-    Example:
+    举例:
     ```bash
     pnpm update react --filter web
     ```

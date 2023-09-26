@@ -5,56 +5,55 @@ description: Caching allows Turborepo to skip work that's already been done, for
 
 import Callout from "../../../../components/Callout";
 
-# Caching Tasks
+# 缓存任务
 
-Every JavaScript or TypeScript codebase will need to run `package.json` scripts, like `build`, `test` and `lint`. In Turborepo, we call these **tasks**.
+每个 JavaScript 或 TypeScript 代码库都需要运行`package.json`脚本，如`build`、`test`和`lint`。在 Turborepo 中，我们称这些脚本为**任务**。
 
-Turborepo can cache the results and logs of your tasks - leading to enormous speedups for slow tasks.
+Turborepo 可以缓存任务的结果和日志，从而大大提高慢速任务的运行速度。
 
-## Missing the cache
 
-Each task in your codebase has **inputs** and **outputs**.
+## 当没有缓存时
 
-- A `build` task might have source files as inputs and outputs logs to `stderr` and `stdout` as well as bundled files.
-- A `lint` or `test` task might have source files as inputs and outputs logs to `stdout` and `stderr`.
+代码库中的每个任务都有**输入**和**输出**。
 
-Let's say you run a `build` task with Turborepo using `turbo run build`:
+- 一个 `build` 任务可能有源文件作为输入，输出日志到 `stderr` 和 `stdout` 以及打包文件。
+- `lint` 或 `test` 任务可能将源文件作为输入，并将日志输出到 `stdout` 和 `stderr`。
+
+假设有一个 `build` 任务使用 `turbo run build`
 
 ![](../../../../public/images/docs/cache-miss.png)
 
-1. Turborepo will **evaluate the inputs to your task** (by default all non-gitignored files in the workspace folder) and **turn them into a hash** (e.g. `78awdk123`).
+1. Turborepo 会**计算任务需要的所有文件** (默认在当前工作区文件夹下所有被 git 追踪的文件)以及**计算每个文件的 hash** (比如 `78awdk123`)
 
-2. **Check the local filesystem cache** for a folder named with the hash (e.g.`./node_modules/.cache/turbo/78awdk123`).
+2. 通过文件夹 hash 来**检查本地文件系统的缓存**(比如 `./node_modules/.cache/turbo/78awdk123`)
 
-3. If Turborepo doesn't find any matching artifacts for the calculated hash, Turborepo will then **execute the task**.
+3. 如果没有发现和 hash 相关的资源，turborepo 就会**执行这个 task**
 
-4. Once the task is over, Turborepo **saves all the outputs** (including files and logs) into its cache under the hash.
+4. 当 task 执行完毕，Turborepo **保存所有输出结果** (包含文件和日志)，并根据 hash 来生成相关资源
 
 <Callout type="info">
-  Turborepo takes a lot of information into account when creating the hash -
-  source files, environment variables, and even the source files of dependent
-  workspaces. Learn more [below](/docs/core-concepts/caching#hashing).
+ 创建 hash 值时，Turborepo 会考虑很多因素：源文件、环境变量甚至源文件的依赖工作区等！[查看更多](/docs/core-concepts/caching#hashing)
 </Callout>
 
-## Hitting the cache
+## 缓存的命中
 
-Let's say that you run the task again without changing any of its inputs:
+假设再次运行同样的任务并且没有更改任何需要的文件：
 
 ![](../../../../public/images/docs/cache-hit.png)
 
-1. The **hash will be the same** because **the inputs haven't changed** (e.g. `78awdk123`)
+1. 由于**输入没有改变**，因此 **hash 是一样**的。(比如 `78awdk123`)
 
-2. Turborepo will find the folder in its cache with the calculated hash (e.g. `./node_modules/.cache/turbo/78awdk123`)
+2. Turborepo 会根据相同的 hash 找到缓存的资源。(比如 `./node_modules/.cache/turbo/78awdk123`)
 
-3. **Instead of running the task**, Turborepo will **replay the output** - printing the saved logs to `stdout` and restoring the saved output files to their respective position in the filesystem.
+3. **替代直接执行任务**, Turborepo 会**重放相同的结果** - 把日志和结果打印到 `stdout` ，并且将保存的输出文件恢复到文件系统中的相应位置。
 
-Restoring files and logs from the cache happens near-instantaneously. This can take your build times from minutes or hours down to seconds or milliseconds. Although specific results will vary depending on the shape and granularity of your codebase's dependency graph, most teams find that they can cut their overall monthly build time by around 40-85% with Turborepo's caching.
+从缓存中恢复文件和日志几乎是瞬间完成的。这可以将构建时间从几分钟或几小时缩短到几秒或几毫秒。虽然具体结果会因代码库依赖关系图的形状和粒度而异，但大多数团队发现，使用 Turborepo 的缓存后，他们每月的总体构建时间可缩短约 40-85%。
 
-## Configuring Cache Outputs
+## 配置缓存的输出
 
-Using [`pipeline`](../reference/configuration#pipeline), you can configure cache conventions across your Turborepo.
+通过 [`pipeline`](../reference/configuration#pipeline), 您可以修改整个 Turborepo 关于缓存约定的配置。
 
-To override the default cache output behavior, pass an array of globs to a [`pipeline.<task>.outputs`](../reference/configuration#outputs) array. Any file that satisfies the glob patterns for a task will be treated as artifact.
+要覆盖默认的缓存输出行为，可向 [`pipeline.<task>.outputs`](./reference/configuration#outputs)数组传递 glob 数组。任何满足任务 glob 模式的文件都将被视为相关资源。
 
 ```jsonc
 {
@@ -71,26 +70,22 @@ To override the default cache output behavior, pass an array of globs to a [`pip
   }
 }
 ```
+如果您的任务不输出任何文件（例如使用 Jest 的单元测试），将 `outputs` 设置为空数组（即 `[]`），Turborepo 将为您缓存日志。
 
-If your task does not emit any files (e.g. unit tests with Jest), set `outputs` to an empty array (i.e. `[]`), and Turborepo will cache the logs for you.
-
-When you run `turbo run build test`, Turborepo will execute your build and test scripts,
-and cache their `output`s in `./node_modules/.cache/turbo`.
+运行 `turbo run build test` 时，Turborepo 将执行您的构建和测试脚本、
+并将其输出缓存到 `./node_modules/.cache/turbo` 目录下。
 
 <Callout type="info">
-  Pro Tip for caching ESLint: You can get a cacheable pretty terminal output
-  (even for non-errors) by setting `TIMING=1` variable before `eslint`. Learn
-  more over in the [ESLint
+  缓存 ESLint 的小贴士：通过在`eslint`前设置`TIMING=1`变量，可以获得可缓存的漂亮终端输出（即使是非错误）。
+  在 `eslint` 前设置 `TIMING=1` 变量，可以获得可缓存的漂亮终端输出（即使是非错误）。了解更多信息[ESLint
   docs](https://eslint.org/docs/latest/developer-guide/working-with-rules#per-rule-performance).
 </Callout>
 
-## Configuring Cache Inputs
+## 配置缓存的输入
 
-A workspace is considered to have been updated when any of the files in that workspace have changed.
-However, for some tasks, we only want to rerun that task when relevant files have changed.
-Specifying `inputs` lets us define which files are relevant for a particular task. For example, the
-`test` configuration below declares that the `test` task only needs to execute if a `.tsx` or `.ts` file
-in the `src/` and `test/` subdirectories has changed since the last execution.
+当工作区内任意文件有修改会被视为这个工作区有修改。
+
+然而，对于有些 task 来说，我们只希望在某些特定文件有修改时重新运行 task。设置 `inputs` 可以让我们决定哪些文件对于某个特定的 task 是相关的。举例，`test`脚本在 `src/` 和 `test/` 目录下的 `.tsx` 或者 `.ts` 文件有修改时重新执行。
 
 ```jsonc
 {
@@ -111,9 +106,9 @@ in the `src/` and `test/` subdirectories has changed since the last execution.
 }
 ```
 
-## Turn off caching
+## 禁用缓存
 
-Sometimes you really don't need or want this cache behavior (e.g. when you're using [`next dev`](https://nextjs.org/docs/api-reference/cli#development) or `react-scripts start` for live reloading). To entirely disable caching, append `--no-cache` to any command:
+有时候可能你不需要缓存，(比如当你使用[`next dev`](https://nextjs.org/docs/api-reference/cli#development) 或者 `react-scripts start` 来做实时更新时(live reloading)). 任一 turbo 命令添加 `--no-cache` 都会完全禁用缓存:
 
 ```shell
 # Run `dev` npm script in all workspaces in parallel,
@@ -121,7 +116,7 @@ Sometimes you really don't need or want this cache behavior (e.g. when you're us
 turbo run dev --parallel --no-cache
 ```
 
-You can also disable caching on specific tasks by setting the [`pipeline.<task>.cache`](../reference/configuration#pipeline-1) configuration to `false`:
+你也可以指定具体的 task 禁用缓存，通过设置 [`pipeline.<task>.cache`](../reference/configuration#pipeline-1) 为 `false`:
 
 ```json
 {
@@ -134,12 +129,9 @@ You can also disable caching on specific tasks by setting the [`pipeline.<task>.
 }
 ```
 
-## Alter Caching Based on File Changes
+## 根据文件的修改来缓存
 
-For some tasks, you may not want a cache miss if an irrelevant file has changed. For instance, updating `README.md`
-might not need to trigger a cache miss for the `test` task. You can use `inputs` to restrict the set
-of files `turbo` considers for a particular task. In this case, only consider `.ts` and `.tsx` files relevant for
-determining a cache hit on the `test` task:
+对于某些任务，如果无关文件发生变化，您可能也不希望缓存缺失。举个例子，对于 `test`任务， 修改 `README.md` 文件可能不需要触发缓存缺失。您可以使用 `inputs` 来限制文件的集合。在这种情况下，只考虑`.ts`和`.tsx`是与确定缓存命中相关的文件。
 
 ```jsonc
 {
@@ -156,14 +148,10 @@ determining a cache hit on the `test` task:
 ```
 
 <Callout type="info">
-  `package.json` is *always* considered an input for tasks in the workspace it
-  lives in. This is because the *definition* of the task itself lives in
-  `package.json` in the `scripts` key. If you change that, any cached output is
-  considered invalid.
+  `package.json` *总是* 被认为是当前工作区任务的输入的一部分。这是因为任务本身的**定义**就在于 `package.json` 的 `scripts` 字段。如果你改了这个，任何已缓存的输出都将被视为无效。
 </Callout>
 
-If you want _all_ tasks to depend on certain files, you can declare this dependency in the
-`globalDependencies` array.
+如果你需要为 _所有的_ task 指定某个依赖的文件，你可以设置 `globalDependencies`。
 
 ```diff
 {
@@ -181,21 +169,17 @@ If you want _all_ tasks to depend on certain files, you can declare this depende
 ```
 
 <Callout type="info">
-  `turbo.json` is *always* considered a global dependency. If you modify
-  `turbo.json`, all caches are invalidated.
+  `turbo.json` *总是* 被视作全局的依赖，如果它有修改，所有的缓存都会失效。
 </Callout>
 
-## Altering Caching Based on Environment Variables
+## 根据环境变量修改缓存
 
-When you use `turbo` with tools that inline environment variables at build time
-(e.g. [Next.js][1] or [Create React App][2]), it is important to tell `turbo` about it.
-Otherwise, you could ship a cached build with the wrong environment variables!
+在构建时，如果将`turbo` 与内联环境变量的工具一起使用，(例如 [Next.js][1] 或 [Create React App][2]）时，请务必告知 `turbo`。否则，您可能会在缓存构建中使用错误的环境变量！
 
-You can control `turbo`'s caching behavior based on
-the values of environment variables:
+您可以根据环境变量的值来控制 `turbo` 的缓存行为：
 
-- Including environment variables in the `env` key in your `pipeline` definition will impact the cache fingerprint on a per-task or per-workspace-task basis.
-- The value of any environment variable that includes `THASH` in its name will impact the cache fingerprint of _all_ tasks.
+- 将环境变量包含在 `pipeline` 定义中的 `env` 键中，会影响每个任务或每个工作区任务的缓存指纹。
+- 任何名称中包含 `THASH` 的环境变量的值都会影响 _所有_ 任务的缓存指纹。
 
 ```jsonc
 {
@@ -224,12 +208,10 @@ the values of environment variables:
 ```
 
 <Callout type="info">
-  Declaring environment variables in the `dependsOn` config with a `$` prefix is
-  deprecated.
+   在 `dependsOn` 配置中声明带有 `$` 前缀的环境变量已被弃用。
 </Callout>
 
-To alter the cache for _all_ tasks, you can declare environment variables in the
-`globalEnv` array:
+要更改 _所有_ 任务的缓存，可以在 `globalEnv` 数组中声明环境变量：
 
 ```diff
 {
@@ -260,9 +242,9 @@ To alter the cache for _all_ tasks, you can declare environment variables in the
 }
 ```
 
-### Automatic environment variable inclusion
+### 自动包含环境变量
 
-To help ensure correct caching across environments, Turborepo automatically infers and includes public environment variables when calculating cache keys for apps built with detected frameworks. You can safely omit framework-specific public environment variables from `turbo.json`:
+为了帮助确保跨环境的正确缓存，Turborepo 在计算使用检测到的框架构建的应用程序的缓存密钥时，会自动推断并包含公共环境变量。您可以从 `turbo.json` 中安全地省略特定框架的公共环境变量：
 
 ```diff filename="turbo.json"
 {
@@ -275,8 +257,7 @@ To help ensure correct caching across environments, Turborepo automatically infe
   }
 }
 ```
-
-Note that this automatic detection and inclusion only works if Turborepo successfully infers the framework your apps are built with. The supported frameworks and the environment variables that Turborepo will detect and include in the cache keys:
+请注意，只有当 Turborepo 成功推断出您的应用程序所使用的框架时，这种自动检测和包含才会起作用。支持的框架和环境变量将被 Turborepo 检测并包含在缓存中：
 
 - Astro: `PUBLIC_*`
 - Blitz: `NEXT_PUBLIC_*`

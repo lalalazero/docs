@@ -2,26 +2,27 @@ import Callout from "../../../../components/Callout";
 import HeartIcon from "@heroicons/react/solid/HeartIcon";
 import { Tabs, Tab } from "../../../../components/Tabs";
 
-# Workspaces
+# 工作区 
 
-Workspaces are the building blocks of your monorepo. Each app and package you add to your monorepo will be **inside its own workspace**.
+工作区是 monorepo 的核心要素。添加到 monorepo 的每个应用程序和包都**位于自己的工作区内**.
 
-Workspaces are managed by your [package manager](/repo/docs/handbook/package-installation), so make sure you've set that up first.
+工作区由[包管理器](/repo/docs/handbook/package-installation)来管理，因此要先确保设置了包管理器。
 
-## Configuring workspaces
+## 工作区配置
 
-To use workspaces, you must first declare their file system locations to your package manager.
+要使用工作区，必须先向包管理器声明仓库文件夹结构。
 
-A common convention we recommend is having top-level `apps/` and `packages/` directories. This isn't a requirement - just a suggested directory structure.
+我们推荐的一个通用惯例是拥有顶层的 `apps/` 和 `packages/` 目录。这只是建议的目录结构。
 
-The `apps` folder should contain workspaces for launchable apps, such as a [Next.js](https://nextjs.org/) or [Svelte](https://svelte.dev/) app.
+`apps` 文件夹应包含可启动应用程序的工作区，例如 [Next.js](https://nextjs.org/) 或 [Svelte](https://svelte.dev/) 应用程序。
 
-The `packages` folder should contain workspaces for packages used by either an app or another package.
+`packages` 文件夹应包含应用程序或其他包使用的包的工作区。
+
 
 <Tabs items={['npm', 'yarn', 'pnpm']} storageKey="selected-pkg-manager">
   <Tab>
 
-    Add the folders you want to configure as workspaces to the `workspaces` field in your root `package.json` file. This field contains a list of workspace folders in the form of globs:
+    添加一个根目录文件夹，里面包含 `package.json` 文件，其中的 `workspace` 字段声明要包含的所有工作区，可以使用 glob 匹配。
 
     ```json
     {
@@ -38,7 +39,7 @@ The `packages` folder should contain workspaces for packages used by either an a
   </Tab>
   <Tab>
 
-    Add the folders you want to configure as workspaces to the `workspaces` field in your root `package.json` file. This field contains a list of workspace folders in the form of globs:
+    添加一个根目录文件夹，里面包含 `package.json` 文件，其中的 `workspace` 字段声明要包含的所有工作区，可以使用 glob 匹配。
 
     ```json
     {
@@ -56,7 +57,7 @@ The `packages` folder should contain workspaces for packages used by either an a
 
   <Tab>
 
-    Add the folders you want to configure as workspaces to the `pnpm-workspace.yaml` file that exists in your root directory. This file contains a list of workspace folders in the form of globs:
+    添加一个根目录文件夹，里面包含 `pnpm-workspace.yaml` 文件，其中的 `packages` 字段声明要包含的所有工作区，可以使用 glob 匹配。
 
     ```yaml
     packages:
@@ -80,31 +81,30 @@ my-monorepo
 └─ sdk
 ```
 
-In the example above, all directories inside `my-monorepo/apps/` and `my-monorepo/packages/` are workspaces, and the `my-monorepo/docs` directory itself is also a workspace. `my-monorepo/sdk/` is _not_ a workspace, as it is not included in the workspace configuration.
+在上例中，`my-monorepo/apps/` 和 `my-monorepo/packages/` 目录下的所有目录都是工作区，`my-monorepo/docs` 目录本身也是工作区。`my-monorepo/sdk/` 不是工作区，因为它没有包含在工作区目录的配置中。
 
-## Naming workspaces
+## 工作区命名
 
-Each workspace has a unique name, which is specified in its `package.json`:
+每个工作区都有一个唯一的名称，该名称在工作区的 `package.json` 中指定：
 
 ```json filename="packages/shared-utils/package.json"
 {
   "name": "shared-utils"
 }
 ```
+这个名字用来：
 
-This name is used to:
+1. 指定依赖应该[安装到哪个工作区](/repo/docs/handbook/package-installation)
+1. 在其他工作区中引用该工作区
+1. [发布包](/repo/docs/handbook/publishing-packages)：使用该`name`发布到 `npm` 上
 
-1. Specify which workspace a [package should be installed to](/repo/docs/handbook/package-installation)
-1. Use this workspace in other workspaces
-1. [Publish packages](/repo/docs/handbook/publishing-packages): it'll be published on npm under the `name` you specify
+这个名字仍然可以使用 npm org 或自定义 scope 来避免与 npm 上的现有包发生命名冲突。例如，你可以使用 `@mycompany/shared-utils`。
 
-You can use an npm organization or user scope to avoid collisions with existing packages on npm. For instance, you could use `@mycompany/shared-utils`.
+## 工作区的互相引用
 
-## Workspaces which depend on each other
+想在一个工作区中使用另一个工作区，可以用该工作区的名字来声明是一个依赖。
 
-To use a workspace inside another workspace, you'll need to specify it as a dependency, using its name.
-
-For instance, if we want `apps/docs` to import `packages/shared-utils`, we'd need to add `shared-utils` as a dependency inside `apps/docs/package.json`:
+举个例子：我们想要在 `apps/docs` 中引入 `packages/shared-utils`, 可以通过在`apps/docs/package.json` 把 `shared-utils` 声明为一个依赖：
 
 <Tabs items={['npm', 'yarn', 'pnpm']} storageKey="selected-pkg-manager">
   <Tab>
@@ -142,27 +142,24 @@ For instance, if we want `apps/docs` to import `packages/shared-utils`, we'd nee
 </Tabs>
 
 <Callout type="info">
-  The `*` allows us to reference the _latest_ version of the dependency. It
-  saves us from needing to bump the versions of our dependency if the versions
-  of our packages change.
+  这个符号 `*` 表示使用依赖最新的版本，这样帮助我们避免在依赖更新的时候手动升级版本。
 </Callout>
 
-Just like a normal package, we'd need to run `install` from root afterwards. Once installed, we can use the workspace as if it were any other package from `node_modules`. See our [section on sharing code](/repo/docs/handbook/sharing-code) for more information.
+之后就像一个普通的 npm 包，我们要在根目录下运行 `install` 安装它。当安装完成之后，我们使用工作区就像使用 `node_modules` 下的其他包一样，[参见代码共享](/repo/docs/handbook/sharing-code) 。
 
-## Managing workspaces
 
-In a monorepo, when you run an `install` command from root, a few things happen:
+## 管理工作区
 
-1. The workspace dependencies you have installed are checked
-1. Any workspaces are [symlinked](https://en.wikipedia.org/wiki/Symbolic_link) into `node_modules`, meaning that you can import them like normal packages
-1. Other packages are downloaded and installed into `node_modules`
+在 monorepo 的根目录下，当运行 `install` 命令时：
 
-This means that whenever you add/remove workspaces, or change their locations on the filesystem, you'll need to re-run your `install` command from root to set up your workspaces again.
+1. 会校验工作区已下载的依赖
+1. 每个工作区都会被 [软链](https://en.wikipedia.org/wiki/Symbolic_link) 到 `node_modules` 目录下，因此你可以像普通的包一样引用它们
+1. 其他的包和依赖会下载到`node_modules`目录下
+
+因此，当工作区有更改时（比如添加、删除工作区），或者是更改它们的文件系统地址（比如重命名文件夹），你需要在根目录重新运行 `install` 命令。
 
 <Callout>
-  You **don't need to re-install every time your source code changes** inside a
-  package - only when you change the locations (or configuration) of your
-  workspaces in some way.
+  当你**在工作区下某个包的源码更改时，你不需要重新运行 install 命令**，只有当工作区的文件夹目录（或者工作区“配置”）发生变化时才需要
 </Callout>
 
-If you run into issues, you may have to delete each `node_modules` folder in your repository and re-run `install` to correct it.
+如果有其他问题，你可能需要用删除 `node_modules` 大法并重新运行 `install` 命令。

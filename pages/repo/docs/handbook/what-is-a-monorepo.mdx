@@ -1,43 +1,45 @@
 import { Tabs, Tab } from "../../../../components/Tabs";
 
-# What is a Monorepo?
+# 什么是 Monorepo?
 
-A monorepo is a collection of many different apps and packages in a single codebase.
+一个 monorepo 是将许多不同的应用程序和包合并到一个单一的代码库中的集合。
 
-The alternative setup is called **a polyrepo** - multiple codebases which are published and versioned separately.
+还有一种方案称为**多仓库（polyrepo）** - 也就是每个代码库分别发布和版本管理。
 
-## Sharing code
 
-### In a polyrepo
+## 代码共享
 
-In a polyrepo setup, the process for sharing code between applications is relatively lengthy.
+### 多仓库的做法
 
-Imagine that you have three separate repositories - `app`, `docs`, and `shared-utils`. Both `app` and `docs` depend on `shared-utils`, which is published as a package on npm.
+在多版本库设置中，应用程序之间共享代码的过程相对较长。
 
-Let's say a bug in `shared-utils` is causing a critical issue in both `app` and `docs`. You'll need to:
+想象一下，有三个独立的仓库：`app`、`docs`和 `shared-utils`。`app`和 `docs`都依赖于 `shared-utils`，而 `shared-utils`作为一个软件包发布在 npm 上。
 
-1. Make a commit in `shared-utils` fixing the error
-2. Run a `publish` task inside `shared-utils` to publish it to npm
-3. Make a commit in `app` bumping the version of the `shared-utils` dependency
-4. Make a commit in `docs` bumping the version of the `shared-utils` dependency
-5. `app` and `docs` are now ready to be deployed.
+假设 `shared-utils` 中的一个 bug 导致 `app` 和 `docs` 都出现了关键问题。你需要
 
-The more apps you have that depend on `shared-utils`, the longer this process takes. It can be extremely arduous.
+1. 在 `shared-utils` 中提交一次，修复错误
+2. 在 `shared-utils` 中运行 `publish` 任务，将其发布到 npm
+3. 在 `app` 中提交一次，提升`shared-utils`依赖的版本
+4. 在 `docs` 中提交一次，提升 `shared-utils`依赖的版本
+5. 应用程序 `app`和 `docs` 现在可以部署了。
 
-### In a monorepo
+依赖于 `shared-utils` 的应用程序越多，这个过程所需的时间就越长。这可能会非常艰巨。
 
-In a monorepo setup, `shared-utils` would be _in the same codebase_ as `app` and `docs`. This makes the process very simple:
+### monorepo 的做法
 
-1. Make a commit in `shared-utils` fixing the error
-2. `app` and `docs` are now ready to be deployed.
+在 monorepo 设置中，`shared-utils` 与 `app` 和 `docs` 位于同一代码库中。这使得整个过程非常简单：
 
-No versioning is required, because `app` and `docs` don't depend on the version of `shared-utils` in npm - they depend on the **version that's in the codebase**.
+1. 在 `shared-utils` 中提交一次错误修复
+2. 现在就可以部署 `app` 和 `docs` 了。
 
-This makes it possible to create single commits which fix bugs in multiple apps and packages at once. This can be an enormous gain in speed for teams.
+不需要版本控制，因为 `app` 和 `docs` 并不依赖于 npm 中的 `shared-utils` 版本，而是依赖于代码库中的**版本**。
 
-## How do monorepos work?
+这样就可以创建一次提交，同时修复多个应用程序和软件包中的错误。对于团队来说，这将大大提高工作速度。
 
-The main building block of the monorepo is the [workspace](/repo/docs/handbook/workspaces). Each application and package you build will be in its own workspace, with its own `package.json`. As you'll learn from our guide, workspaces can **depend on each other**, meaning your `docs` workspace can depend on `shared-utils`:
+
+## monorepo 是怎么做到的？
+
+Monorepo 的核心要素是 [workspace](/repo/docs/handbook/workspaces)。每个应用程序和包都将位于自己的工作区内，具有自己的 `package.json`。工作区可以**相互依赖**，这意味着 `docs` 工作区可以依赖于 `shared-utils`：
 
 <Tabs items={['npm', 'yarn', 'pnpm']} storageKey="selected-pkg-manager">
   <Tab>
@@ -74,9 +76,9 @@ The main building block of the monorepo is the [workspace](/repo/docs/handbook/w
   </Tab>
 </Tabs>
 
-Workspaces are managed by the same CLI which [installs your dependencies](/repo/docs/handbook/package-installation).
+工作区是由同一个命令行（CLI）管理的，该 CLI 也负责 [安装依赖项](/repo/docs/handbook/package-installation)。
 
-### The root workspace
+### 根工作区
 
 You'll also have a root workspace - a `package.json` in the root folder of your codebase. This is a useful place for:
 

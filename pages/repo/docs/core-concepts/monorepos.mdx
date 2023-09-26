@@ -1,23 +1,23 @@
-# Turborepo in Monorepos
+# Turborepo 中的 Monorepo
 
-## The problem
+## 问题
 
 ![](../../../../public/images/docs/why-turborepo-problem.png)
 
-Monorepos have many advantages - but **they struggle to scale**. Each workspace has its own test suite, its own linting and its own build process. A single monorepo might have **hundreds of tasks to execute**.
+Monorepo 具有很多优势 - 但是 **它们不易扩展**。每个工作区都有自己的测试套件，lint规则，构建程序。一个普普通通的 monorepo 可能会有**几百个任务要执行**。
 
-## The solution
+## 解决方法
 
 ![](../../../../public/images/docs/why-turborepo-solution.png)
 
-**Turborepo solves your monorepo's scaling problem**. Our remote cache stores the result of all your tasks, meaning that **your CI never needs to do the same work twice**.
+**Turborepo 解决了 monorepo 不易扩展的问题**。通过远端缓存保存了所有任务执行的结果，意味着**CI不用跑相同的任务两次**.
 
-Task scheduling can be difficult in a monorepo. Imagine `yarn build` needs to run before `yarn test`, across all your workspaces. Turborepo **can schedule your tasks for maximum speed**, across all available cores.
+任务的调度对于 monorepo 来说是困难的。试想 `yarn build` 需要在 `yarn test` 之前运行, 在所有的工作区中。Turborepo **可以用最快的速度调度你的任务**，在所有各种范围内。
 
-Turborepo can be **adopted incrementally**. It uses the `package.json` scripts you've already written, the dependencies you've already declared, and a single `turbo.json` file. You can **use it with any package manager**, like `npm`, `yarn` or `pnpm`. You can add it to any monorepo in just a few minutes.
+Turborepo 可以**增量**采用。它只需要使用 `package.json`中的脚本、已声明的依赖和一个`turbo.json`文件。你可以**使用任何软件包管理器**，如 `npm`、`yarn` 或 `pnpm`。您只需几分钟就能将其添加到任何 monorepo 中。
 
-## What turborepo is not
+## turborepo 不是
 
-Turborepo **doesn't handle [package installation](/repo/docs/handbook/package-installation)**. Tools like `npm`, `pnpm` or `yarn` already do that brilliantly. But they run tasks inefficiently, meaning slow CI builds.
+Turborepo **不负责 [package 安装](/repo/docs/handbook/package-installation)**。`npm`，`pnpm` 或 `yarn` 等工具已经很好地做到了这一点。但它们运行任务的效率很低，这意味着 CI 构建速度很慢。
 
-We recommend that **Turborepo runs your tasks**, and your favorite package manager installs your packages.
+我们建议**Turborepo 执行 package 的脚本任务**，而您最喜欢的软件包管理器安装您的软件包。

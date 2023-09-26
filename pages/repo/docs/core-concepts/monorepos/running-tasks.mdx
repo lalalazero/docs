@@ -6,17 +6,19 @@ description: Turborepo helps you specify task dependencies declaratively.
 import Callout from "../../../../../components/Callout";
 import HeartIcon from "@heroicons/react/solid/HeartIcon";
 
-# Running Tasks in a Monorepo
+# 在 monorepo 中执行任务
 
-Every monorepo has two main building blocks: **workspaces** and **tasks**. Let's imagine you have a monorepo containing **three workspaces**, each with **three tasks**:
+每个 monorepo 都有两个基本元素：**工作区** 和 **任务**。
+
+假设你有一个 monorepo，包含 **3个工作区**，每个工作区包含 **3个任务**：
 
 ![](../../../../../public/images/docs/your-monorepo-excalidraw.png)
 
-Here, both `apps/web` and `apps/doc` use code from `packages/shared`. In fact, when they're built (via `build`) **they need `packages/shared` to be built _first_**.
+`apps/web` 和 `apps/doc` 都会用到 `packages/shared` 中的代码。事实上, 当它们构建的时候 (通过 `build` 命令) **它们依赖 `packages/shared` _先_ 被构建**。
 
-## Most tools don't optimize for speed
+## 大多数工具都没有做速度优化
 
-Let's imagine we want to run all our tasks across all our workspaces. In a tool like `yarn`, you might run a script like this:
+想象我们需要在所有工作区运行所有的任务。如果用 `yarn` 大概会运行这个脚本：
 
 ```
 yarn workspaces run lint
@@ -24,19 +26,19 @@ yarn workspaces run test
 yarn workspaces run build
 ```
 
-This would mean the tasks run like this:
+这些任务像这样运行：
 
 ![](../../../../../public/images/docs/yarn-workspaces-excalidraw.png)
 
-As you can see, `lint` gets run in all the workspaces. Then, `build` gets run - with `shared` going first. Finally, `test` gets run.
+正如上图, `lint` 在所有的工作区内执行。然后，`build` 执行 - 工作区 `shared` 首先执行。最后， `test` 执行。
 
-**This is the slowest possible way to run these tasks**. Each task needs to wait for the previous one to finish before it can start. To improve on this, we'll need a tool that can multitask.
+**这是运行这些任务的最慢方式**。每个任务都需要等待前一个任务完成后才能开始。为了改善这种情况，我们需要一个可以执行多任务的工具。
 
-## Turborepo can multitask
+## Turborepo 可以多任务
 
-Turborepo can schedule our tasks for maximum speed by understanding the dependencies between our tasks.
+Turborepo 可以通过了解任务之间的依赖关系来调度任务，从而最大限度地提高速度。
 
-First, we declare our tasks inside `turbo.json`:
+首先，我们在 `turbo.json` 中声明我们的任务：
 
 ```json
 {
@@ -56,8 +58,7 @@ First, we declare our tasks inside `turbo.json`:
   }
 }
 ```
-
-Next, we can replace our `yarn workspaces` script with this:
+接下来，我们可以用以下脚本替换 `yarn workspaces` 脚本：
 
 ```diff
 - yarn workspaces run lint
@@ -65,18 +66,17 @@ Next, we can replace our `yarn workspaces` script with this:
 - yarn workspaces run build
 + turbo run lint test build
 ```
-
-When we run it, Turborepo will **multitask as many tasks as possible over all available CPU's**, meaning our tasks run like this:
+运行时，Turborepo 会根据 CPU 上可以执行的任务来尽可能多的执行任务，像这样：
 
 ![](../../../../../public/images/docs/turborepo-excalidraw.png)
 
-Both `lint` and `test` run immediately, because they have no `dependsOn` specified in `turbo.json`.
+`lint` 和 `test` 立马运行, 因为它们在 `turbo.json`没有声明的依赖 `dependsOn`。
 
-The `build` task inside `shared` completes first, then `web` and `docs` build afterwards.
+当位于`shared`的脚本`build`一旦完成，然后执行`web` 和 `docs`的 `build`。
 
-## Defining a pipeline
+## 定义 pipeline
 
-The `pipeline` configuration declares which tasks depend on each other in your monorepo. Here's a kitchen sink example:
+`pipeline` 用来定义 monorepo 中的任务之间的依赖关系。如下示例：
 
 ```diff
 {
@@ -113,16 +113,15 @@ The `pipeline` configuration declares which tasks depend on each other in your m
   }
 }
 ```
+在学习 `turbo.json` 之前，我们先来了解一些常见的模式。
 
-Let's walk through some common patterns you'll want to get to know before diving in to `turbo.json`.
+### 任务之间的依赖
 
-### Dependencies between tasks
+#### 同一个工作区
 
-#### In the same workspace
+有些任务可能需要在其他任务之前运行。例如，`build`可能需要在 `deploy`之前运行。
 
-There might be tasks which need to run _before_ other tasks. For instance, `build` might need to be run before `deploy`.
-
-If both tasks are in the same workspace, you can specify the relationship like this:
+如果两个任务都在同一个工作区，可以这样指定关系：
 
 ```json filename="turbo.json"
 {
@@ -138,39 +137,36 @@ If both tasks are in the same workspace, you can specify the relationship like t
   }
 }
 ```
+这意味着在运行 `turbo run deploy` 时，`build` 也将在同一工作区内运行。
 
-This means that whenever `turbo run deploy` is run, `build` will also be run inside the same workspace.
+#### 不同的工作区
 
-#### In a different workspace
+在 monorepos 中，另一种常见的模式是声明一个工作区的 `build` 任务只有在它 **所依赖的 _所有_ 工作区** 的 `build` 任务都完成后才能运行。
 
-A common pattern in monorepos is to declare that a workspace's `build` task should only run once the `build` tasks of all _the workspaces it depends on_ are complete.
-
-The `^` symbol explicitly declares that the task has a dependency on a task in a workspace it depends on.
+`^`符号用来显示声明某个任务需要依赖其他工作区的任务。
 
 ```jsonc filename="turbo.json"
 {
   "$schema": "https://turborepo.org/schema.json",
   "pipeline": {
     "build": {
-      // "A workspace's `build` command depends on its dependencies'
-      // and devDependencies' `build` commands being completed first"
+      // ^build 表示这个 `build` 依赖于 它的依赖 或者 它的dev依赖的 `build` 命令先完成
       "dependsOn": ["^build"]
     }
   }
 }
 ```
 
-#### No dependencies
+#### 无依赖
 
-An empty dependency list (`dependsOn` is either undefined or `[]`) means that nothing needs to run before this task! After all, it has NO dependencies.
+空数组 (`dependsOn` 要么是 undefined 要么是 `[]`) 表示无依赖。
 
 ```jsonc
 {
   "$schema": "https://turborepo.org/schema.json",
   "pipeline": {
     "lint": {
-      // A workspace's `lint` command has no dependencies and can be run
-      // whenever.
+      // `lint` 命令没有前置依赖，随时都可以执行（因为 dependsOn 是 undefined）
       "outputs": []
     }
   }
@@ -222,16 +218,14 @@ This explicit configuration for `frontend#deploy` may seem to conflict with the 
 
 </Callout>
 
-### Running tasks from the root
+### 根目录执行任务
 
-`turbo` can run tasks that exist in the `package.json` file at the root of the monorepo.
-These must be explicitly added to the pipeline configuration using the key syntax `"//#<task>"`. This is
-true even for tasks that already have their own entry. For example, if your pipeline declares a `"build"` task,
-and you want to include the `build` script defined in the monorepo's root `package.json` file with
-`turbo run build`, you must opt the root into it by declaring `"//#build": {...}` in your configuration.
-Conversely, you _do not_ need to define a generic `"my-task": {...}` entry if all you need is `"//#my-task": {...}`.
+turbo 可以运行 monorepo 根目录下 `package.json` 文件中的任务，必须使用语法 `"//#<task>"`明确地将这些任务添加到 pipeline 配置中。即便已经有了一个同名脚本，根目录的配置仍然有效。
 
-A sample pipeline that defines the root task `format` and opts the root into `test` might look like:
+举个例子，在 pipeline 中已经声明了一个 `build` 任务，但是你想在执行 `turbo run build` 时，包含根目录的 `package.json` 中的 `build` 任务一起执行。
+你需要在配置中添加 `"//#build": {...}` 才能达到效果。相反的是，你不需要再额外定义一个 `"my-task": {...}`，你只需要这样 `"//#my-task": {...}` 配置。
+
+如下是一个例子：
 
 ```jsonc
 {
@@ -244,16 +238,13 @@ A sample pipeline that defines the root task `format` and opts the root into `te
       "dependsOn": ["^build"],
       "outputs": []
     },
-    // This will cause the "test" script to be included when
-    // "turbo run test" is run
+    // 运行 "turbo run test" 也会同样运行 "test" 命令
     "//#test": {
       "dependsOn": [],
       "outputs": []
     },
-    // This will cause the "format" script in the root package.json
-    // to be run when "turbo run format" is run. Since the general
-    // "format" task is not defined, only the root's "format" script
-    // will be run.
+    // 运行 "turbo run format" 会执行根目录的 package.json 中的 "format" 命令
+    // 由于 pipeline 中没有额外定义 format 任务，因此只有根目录下的 "format" 命令会执行
     "//#format": {
       "dependsOn": [],
       "outputs": ["dist/**/*"],
@@ -263,12 +254,8 @@ A sample pipeline that defines the root task `format` and opts the root into `te
 }
 ```
 
-**A note on recursion**: Scripts defined in the monorepo's root `package.json` often call `turbo` themselves.
-For example, the `build` script might be `turbo run build`. In this situation, including `//#build` in
-`turbo run build` will cause infinite recursion. It is for this reason that tasks run from the monorepo's root must
-be explicitly opted into via including `//#<task>` in the pipeline configuration. `turbo` includes
-some best-effort checking to produce an error in the recursion situations, but it is up to you to to only
-opt in those tasks which don't themselves trigger a `turbo` run that would recurse.
+**关于递归**: 有些定义在根目录的 `package.json` 中的命令本身已经会包含 `turbo`。比如，`build: turbo run build`，在这种情况下，定义在 pipeline 中的 `//#build` 会导致无限递归。因此通常需要这样执行的代码都推荐用`//#<task>`语法写在 pipeline 配置里。`turbo` 自身会尽最大努力的检查，以便在递归情况下抛出错误，但这取决于你是否只
+选择那些本身不会触发会递归的 `turbo` 运行的任务。
 
 <Callout
   type="idea"
@@ -281,12 +268,12 @@ opt in those tasks which don't themselves trigger a `turbo` run that would recur
   fanning out tasks in such a concise and elegant way.
 </Callout>
 
-### Tips
+### 小提示
 
-#### Tasks that are in the `pipeline` but not in SOME `package.json`
+#### 有些任务只在 `pipeline` 而不在 `package.json`中
 
-Sometimes tasks declared in the `pipeline` are not present in all workspaces' `package.json` files. `turbo` will gracefully ignore those. No problem!
+有时，`pipeline` 中声明的任务并不存在于所有工作区的 `package.json` 文件中。`turbo` 会优雅地忽略这些任务。没问题！
 
-#### `pipeline` tasks are the only ones that `turbo` knows about
+#### `turbo` 只会处理定义在 `pipeline` 的任务
 
-`turbo` will only account for tasks declared in the `pipeline` configuration. If it's not listed there, `turbo` will not know how to run them.
+`turbo` 只会运行定义在 `pipeline` 配置中声明的任务。如果不在配置中，`turbo` 不知道如何运行它们。

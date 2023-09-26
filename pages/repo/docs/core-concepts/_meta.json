@@ -1,7 +1,7 @@
 {
-  "caching": "Caching Tasks",
-  "remote-caching": "Remote Caching",
-  "monorepos": "Monorepos",
+  "caching": "缓存 Tasks",
+  "remote-caching": "远端缓存",
+  "monorepos": "Monorepo",
   "scopes": {
     "display": "hidden"
   }
